@@ -1,20 +1,54 @@
 import pygame
+import os
+import sys
 
-pygame.init()
-pygame.mixer.init()
+# ── ① 오디오 초기화 (노이즈 및 재생 속도 해결) ──────────────
+try:
+    # 8비트 음원은 주파수를 22050으로 설정할 때 가장 안정적으로 재생됩니다.
+    pygame.mixer.pre_init(22050, -16, 2, 4096)
+    pygame.init()
+    pygame.mixer.init()
+except Exception as e:
+    print(f"믹서 초기화 오류: {e}")
+
 screen = pygame.display.set_mode((400, 300))
-pygame.display.set_caption("Mouse Click Sound")
+pygame.display.set_caption("Quantum Slither Sound Test")
 clock = pygame.time.Clock()
 
-# ── ① 효과음 및 배경음악 로드 ──────────────────
-shoot_sound = pygame.mixer.Sound(r"C:\Users\HOSEO\Desktop\viralaudio-descent-whoosh-long-cinematic-sound-effect-405921.mp3")
-pygame.mixer.music.load(r"C:\Users\HOSEO\Desktop\alexgrohl-energetic-action-sport-500409bgm.gg")
+# ── ② 상대 경로 설정 ────────────────────────────────────────
+# 실행 중인 .py 파일의 폴더 위치를 기준으로 파일을 찾습니다.
+BASE_PATH = os.path.dirname(os.path.abspath(__file__))
 
-# ── ② 볼륨 및 페이드인 설정 ────────────────────
-shoot_sound.set_volume(0.5)
-pygame.mixer.music.set_volume(0.6)
-pygame.mixer.music.play(loops=-1, fade_ms=5000)
+# 파일명 설정 (사용자가 제공한 파일명으로 교체)
+#BGM_FILE = "653804__josefpres__8-bit-game-loop-004-only-organ-short-120-bpm.mp3"
+# 효과음 파일이 있다면 아래 이름을 수정하세요. 현재는 BGM 파일을 효과음처럼 테스트하도록 설정했습니다.
+EFFECT_FILE = "653804__josefpres__8-bit-game-loop-004-only-organ-short-120-bpm.mp3" 
 
+BGM_PATH = os.path.join(BASE_PATH, BGM_FILE)
+EFFECT_PATH = os.path.join(BASE_PATH, EFFECT_FILE)
+
+# ── ③ 사운드 로드 및 재생 ────────────────────────────────────
+try:
+    # 배경음악 로드 (상대 경로)
+    if os.path.exists(BGM_PATH):
+        pygame.mixer.music.load(BGM_PATH)
+        pygame.mixer.music.set_volume(0.4)
+        pygame.mixer.music.play(loops=-1) # 무한 반복
+    else:
+        print(f"BGM 파일을 찾을 수 없습니다: {BGM_FILE}")
+
+    # 효과음 로드 (상대 경로)
+    if os.path.exists(EFFECT_PATH):
+        click_sound = pygame.mixer.Sound(EFFECT_PATH)
+        click_sound.set_volume(0.6)
+    else:
+        click_sound = None
+        print(f"효과음 파일을 찾을 수 없습니다: {EFFECT_FILE}")
+
+except Exception as e:
+    print(f"사운드 로드 오류: {e}")
+
+# ── ④ 메인 루프 ──────────────────────────────────────────────
 running = True
 while running:
     clock.tick(60)
@@ -22,18 +56,17 @@ while running:
         if event.type == pygame.QUIT:
             running = False
         
-        # ── ③ 마우스 클릭 감지 ────────────────────────
+        # 마우스 클릭 시 효과음 재생
         if event.type == pygame.MOUSEBUTTONDOWN:
-            # 마우스 왼쪽 버튼(1), 휠(2), 오른쪽 버튼(3) 중 아무거나 눌러도 재생
-            # 특정 버튼만 지정하고 싶다면: if event.button == 1: (왼쪽 클릭)
-            shoot_sound.stop()   # 기존 소리 중지
-            shoot_sound.play()   # 처음부터 다시 재생
+            if click_sound:
+                click_sound.stop()  # 중복 재생 방지를 위해 정지 후 재생
+                click_sound.play()
 
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_ESCAPE:
                 running = False
 
-    screen.fill((30, 30, 40))
+    screen.fill((40, 40, 60)) # 배경색 변경
     pygame.display.flip()
 
 pygame.quit()
